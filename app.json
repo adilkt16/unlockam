@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "UnlockAM DevBuild",
+    "slug": "unlockam-mobile-devbuild",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "description": "UnlockAM - Solve to Wake: A smart alarm app that challenges you with puzzles to help you wake up. (Development Build)",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "developmentClient": {
+      "silentLaunch": false
+    },
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#3b82f6"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.unlockam.mobile.devbuild",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#3b82f6"
+      },
+      "package": "com.unlockam.mobile.devbuild",
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.VIBRATE",
+        "android.permission.WAKE_LOCK",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#3b82f6",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c9e53338-b26c-4457-b405-9674f50f2c72"
+      }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
+  }
+}
