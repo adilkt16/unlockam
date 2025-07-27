@@ -17,6 +17,7 @@ import TimeSettingsCard from '../components/TimeSettingsCard';
 import AlarmModal from '../components/AlarmModal';
 import TimePickerModal from '../components/TimePickerModal';
 import { AlarmService } from '../services/AlarmService';
+import { PermissionChecker } from '../services/PermissionChecker';
 import { generateMathPuzzle, generatePatternPuzzle } from '../utils/puzzleGenerator';
 import { useAudio } from '../hooks/useAudio';
 import { GlobalAudioManager } from '../services/GlobalAudioManager';
@@ -320,8 +321,10 @@ export default function HomeScreen() {
       }
     }
     
-    // Normal puzzle solution stop
-    console.log('✅ Normal puzzle solution stop');
+    // Normal puzzle solution stop - track as successful alarm completion
+    console.log('✅ Normal puzzle solution stop - tracking alarm success');
+    await PermissionChecker.getInstance().trackAlarmSuccess();
+    
     await stopAlarm(); // Stop useAudio hook's sound
     await globalAudio.stopAllSounds(); // Stop ALL sounds via global manager
     await alarmService.forceStopEverything(); // AlarmService nuclear option

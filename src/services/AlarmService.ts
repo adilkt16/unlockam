@@ -6,6 +6,8 @@ import * as TaskManager from 'expo-task-manager';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { AlarmSoundGenerator } from '../utils/soundGenerator';
 import { GlobalAudioManager } from './GlobalAudioManager';
+import { PermissionChecker } from './PermissionChecker';
+import { PermissionRequester } from './PermissionRequester';
 
 const BACKGROUND_ALARM_TASK = 'background-alarm-task';
 
@@ -43,6 +45,8 @@ export class AlarmService {
   private isPlaying: boolean = false;
   private backgroundTaskRegistered: boolean = false;
   private globalAudio = GlobalAudioManager.getInstance();
+  private permissionChecker = PermissionChecker.getInstance();
+  private permissionRequester = PermissionRequester.getInstance();
 
   static getInstance(): AlarmService {
     if (!AlarmService.instance) {
@@ -52,32 +56,39 @@ export class AlarmService {
   }
 
   async requestPermissions(): Promise<boolean> {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync({
-        ios: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-          allowCriticalAlerts: true,
-        },
-        android: {
-          allowAlert: true,
-          allowBadge: true,
-          allowSound: true,
-        },
-      });
-      finalStatus = status;
+    try {
+      // Use the new permission system
+      const result = await this.permissionRequester.requestNotificationPermission();
+      
+      if (result.granted) {
+        // Register background task for alarm monitoring
+        if (!this.backgroundTaskRegistered) {
+          await this.registerBackgroundTask();
+        }
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error requesting permissions:', error);
+      return false;
     }
+  }
+
+  async checkPermissionsStatus(): Promise<{
+    isReady: boolean;
+    criticalMissing: string[];
+    recommendedMissing: string[];
+  }> {
+    const isReady = await this.permissionChecker.isReadyForAlarms();
+    const criticalMissing = (await this.permissionChecker.getCriticalMissingPermissions()).map(p => p.type);
+    const recommendedMissing = (await this.permissionChecker.getRecommendedMissingPermissions()).map(p => p.type);
     
-    // Register background task for alarm monitoring
-    if (finalStatus === 'granted' && !this.backgroundTaskRegistered) {
-      await this.registerBackgroundTask();
-    }
-    
-    return finalStatus === 'granted';
+    return {
+      isReady,
+      criticalMissing,
+      recommendedMissing
+    };
   }
 
   private async registerBackgroundTask(): Promise<void> {

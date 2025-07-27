@@ -32,7 +32,12 @@
       "permissions": [
         "android.permission.VIBRATE",
         "android.permission.WAKE_LOCK",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.USE_FULL_SCREEN_INTENT",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"
       ]
     },
     "web": {
