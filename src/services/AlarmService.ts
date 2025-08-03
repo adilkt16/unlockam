@@ -38,6 +38,13 @@ export class AlarmService {
     return AlarmService.instance;
   }
 
+  /**
+   * Check if alarm is currently playing
+   */
+  get isAlarmPlaying(): boolean {
+    return this.isPlaying;
+  }
+
   async requestPermissions(): Promise<boolean> {
     try {
       // No longer requesting notification permissions

@@ -8,12 +8,14 @@ const OnboardingDebugPanel = () => {
   const checkAsyncStorage = async () => {
     try {
       const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
+      const notificationPermissionHandled = await AsyncStorage.getItem('notificationPermissionHandled');
       const dooaPermissionHandled = await AsyncStorage.getItem('dooaPermissionHandled');
       const dooaStatusCardDismissed = await AsyncStorage.getItem('dooaStatusCardDismissed');
       
       const info = `
 Onboarding Status:
 - onboardingComplete: ${onboardingComplete}
+- notificationPermissionHandled: ${notificationPermissionHandled}
 - dooaPermissionHandled: ${dooaPermissionHandled}
 - dooaStatusCardDismissed: ${dooaStatusCardDismissed}
       `;
@@ -28,6 +30,7 @@ Onboarding Status:
   const clearOnboardingData = async () => {
     try {
       await AsyncStorage.removeItem('onboardingComplete');
+      await AsyncStorage.removeItem('notificationPermissionHandled');
       await AsyncStorage.removeItem('dooaPermissionHandled');
       await AsyncStorage.removeItem('dooaStatusCardDismissed');
       

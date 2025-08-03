@@ -8,6 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AndroidPermissions from '../utils/AndroidPermissions';
 
@@ -16,7 +17,7 @@ interface OnboardingFlowProps {
 }
 
 const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState<'dooa' | 'complete'>('dooa');
+  const [currentStep, setCurrentStep] = useState<'notification' | 'dooa' | 'complete'>('notification');
   const [showDooaCard, setShowDooaCard] = useState(false);
 
   useEffect(() => {
@@ -27,6 +28,32 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     try {
       console.log('🔍 OnboardingFlow: ========== CHECKING ONBOARDING STATUS ==========');
       
+      // FOR TESTING: FORCE NOTIFICATION PERMISSION FLOW
+      // This bypasses any stored values and always shows notification dialog first
+      const FORCE_NOTIFICATION_DIALOG = true; // Set to false after testing
+      
+      if (FORCE_NOTIFICATION_DIALOG) {
+        console.log('� OnboardingFlow: FORCING NOTIFICATION PERMISSION DIALOG FOR TESTING');
+        console.log('� OnboardingFlow: Ignoring stored values and starting fresh');
+        
+        // Clear all stored values to ensure clean state
+        await AsyncStorage.removeItem('onboardingComplete');
+        await AsyncStorage.removeItem('notificationPermissionHandled');
+        await AsyncStorage.removeItem('dooaPermissionHandled');
+        
+        // Wait to ensure clean state
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        // Force start with notification permission
+        console.log('🔍 OnboardingFlow: 🚨 FORCING NOTIFICATION PERMISSION REQUEST 🚨');
+        setCurrentStep('notification');
+        setTimeout(() => {
+          handleNotificationPermissionRequest();
+        }, 500);
+        return;
+      }
+      
+      // Normal flow (for when FORCE_NOTIFICATION_DIALOG is false)
       const onboardingComplete = await AsyncStorage.getItem('onboardingComplete');
       console.log('🔍 OnboardingFlow: onboardingComplete =', onboardingComplete);
       
@@ -37,26 +64,141 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
         return;
       }
 
-      console.log('🔍 OnboardingFlow: Starting onboarding - showing DOOA permission...');
+      console.log('🔍 OnboardingFlow: Starting onboarding sequence...');
       
-      // Check if DOOA permission is already handled
+      // Check notification permission first
+      const notificationHandled = await AsyncStorage.getItem('notificationPermissionHandled');
+      console.log('🔍 OnboardingFlow: notificationPermissionHandled =', notificationHandled);
+      
+      if (notificationHandled !== 'true') {
+        console.log('🔍 OnboardingFlow: 🚨 STARTING WITH NOTIFICATION PERMISSION REQUEST 🚨');
+        setCurrentStep('notification');
+        // Small delay to ensure app is ready
+        setTimeout(() => {
+          handleNotificationPermissionRequest();
+        }, 500);
+        return;
+      }
+      
+      // Check DOOA permission next
       const dooaHandled = await AsyncStorage.getItem('dooaPermissionHandled');
       console.log('🔍 OnboardingFlow: dooaPermissionHandled =', dooaHandled);
       
-      if (dooaHandled === 'true') {
-        console.log('🔍 OnboardingFlow: DOOA permission handled, completing onboarding');
-        await completeOnboarding();
-      } else {
-        console.log('🔍 OnboardingFlow: Showing DOOA permission step');
+      if (dooaHandled !== 'true') {
+        console.log('🔍 OnboardingFlow: Moving to DOOA permission step');
         setCurrentStep('dooa');
         setShowDooaCard(true);
+        return;
       }
       
+      // All permissions handled
+      console.log('🔍 OnboardingFlow: All permissions handled, completing onboarding');
+      await completeOnboarding();
+      
     } catch (error) {
-      console.log('ℹ️ OnboardingFlow: Error checking status, starting fresh with DOOA permission');
-      setCurrentStep('dooa');
-      setShowDooaCard(true);
+      console.log('ℹ️ OnboardingFlow: Error checking status, starting fresh with notification permission');
+      console.error('Error details:', error);
+      setCurrentStep('notification');
+      setTimeout(() => {
+        handleNotificationPermissionRequest();
+      }, 500);
     }
+  };
+
+  const handleNotificationPermissionRequest = async () => {
+    try {
+      console.log('📱 OnboardingFlow: ========== 🚨🚨 REQUESTING ANDROID NOTIFICATION PERMISSION 🚨🚨 ==========');
+      console.log('📱 OnboardingFlow: Platform:', Platform.OS);
+      console.log('📱 OnboardingFlow: 🎯 THIS FUNCTION WAS CALLED - NOTIFICATION DIALOG SHOULD APPEAR NOW!');
+      console.log('📱 OnboardingFlow: Android 13+ (API 33+) requires notification permission');
+      
+      // Skip on iOS
+      if (Platform.OS !== 'android') {
+        console.log('📱 OnboardingFlow: iOS detected, skipping notification permission and moving to DOOA');
+        await AsyncStorage.setItem('notificationPermissionHandled', 'true');
+        await moveToDooa();
+        return;
+      }
+      
+      // Get current permission status
+      console.log('📱 OnboardingFlow: Checking current notification permission status...');
+      const currentPermissions = await Notifications.getPermissionsAsync();
+      console.log('📱 OnboardingFlow: Current permission status:', JSON.stringify(currentPermissions, null, 2));
+      
+      const { status: currentStatus, canAskAgain } = currentPermissions;
+      
+      if (currentStatus === 'granted') {
+        console.log('✅ OnboardingFlow: Notification permission already granted, moving to DOOA');
+        await AsyncStorage.setItem('notificationPermissionHandled', 'true');
+        await moveToDooa();
+        return;
+      }
+      
+      if (currentStatus === 'denied' && !canAskAgain) {
+        console.log('⚠️ OnboardingFlow: Notification permission permanently denied, moving to DOOA');
+        await AsyncStorage.setItem('notificationPermissionHandled', 'true');
+        await moveToDooa();
+        return;
+      }
+      
+      console.log('📱 OnboardingFlow: 🚨🚨 TRIGGERING NATIVE ANDROID NOTIFICATION PERMISSION DIALOG 🚨🚨');
+      console.log('📱 OnboardingFlow: This should show the Android system dialog with options:');
+      console.log('📱 OnboardingFlow: - "Allow"');
+      console.log('📱 OnboardingFlow: - "Don\'t allow"');
+      console.log('📱 OnboardingFlow: - "Don\'t allow and don\'t ask again" (on some Android versions)');
+      
+      // Request notification permission - THIS SHOWS THE NATIVE ANDROID DIALOG
+      const permissionRequest = await Notifications.requestPermissionsAsync({
+        android: {},
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+        },
+      });
+      
+      console.log('📱 OnboardingFlow: ========== NATIVE DIALOG COMPLETED ==========');
+      console.log('📱 OnboardingFlow: User response:', JSON.stringify(permissionRequest, null, 2));
+      
+      const { status: resultStatus, canAskAgain: resultCanAskAgain } = permissionRequest;
+      
+      if (resultStatus === 'granted') {
+        console.log('🎉 OnboardingFlow: ✅ USER GRANTED NOTIFICATION PERMISSION! ✅');
+      } else if (resultStatus === 'denied') {
+        console.log('❌ OnboardingFlow: User denied notification permission');
+        if (!resultCanAskAgain) {
+          console.log('🚫 OnboardingFlow: User selected "Don\'t ask again"');
+        }
+      } else {
+        console.log('❓ OnboardingFlow: Unexpected permission result status:', resultStatus);
+      }
+      
+      // Mark notification permission as handled regardless of result
+      await AsyncStorage.setItem('notificationPermissionHandled', 'true');
+      
+      console.log('📱 OnboardingFlow: Moving to DOOA permission step...');
+      
+      // Move to DOOA permission step
+      await moveToDooa();
+      
+    } catch (error) {
+      console.error('💥 OnboardingFlow: CRITICAL ERROR during notification permission request!');
+      console.error('💥 OnboardingFlow: Error details:', error);
+      console.error('💥 OnboardingFlow: Error message:', (error as any)?.message || 'No message');
+      
+      // Even on error, mark as handled and move to DOOA
+      await AsyncStorage.setItem('notificationPermissionHandled', 'true');
+      await moveToDooa();
+    }
+  };
+
+  const moveToDooa = async () => {
+    console.log('📱 OnboardingFlow: 🔄 Moving to DOOA permission step...');
+    setCurrentStep('dooa');
+    // Small delay to ensure clean state transition
+    setTimeout(() => {
+      setShowDooaCard(true);
+    }, 100);
   };
 
   const handleEnableDooa = async () => {
@@ -165,9 +307,14 @@ const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) => {
     return null;
   }
 
-  // Show DOOA card 
+  // Show DOOA card when we reach the dooa step
   if (currentStep === 'dooa') {
     return <DooaPermissionCard />;
+  }
+
+  // For notification step, don't render anything (native dialog handles it)
+  if (currentStep === 'notification') {
+    return null;
   }
 
   return null;

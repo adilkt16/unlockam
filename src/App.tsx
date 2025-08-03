@@ -20,6 +20,7 @@ export default function App() {
   const alarmCheckInterval = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isAlarmModalActive, setIsAlarmModalActive] = useState(false);
   const colorScheme = useColorScheme();
 
   useEffect(() => {
@@ -78,14 +79,42 @@ export default function App() {
   const startAlarmMonitoring = () => {
     console.log('Starting continuous alarm monitoring...');
     
+    // TEMPORARY: Disable alarm monitoring to test if it's causing puzzle interference
+    console.log('⚠️ ALARM MONITORING TEMPORARILY DISABLED FOR PUZZLE TESTING');
+    return;
+    
     // Check for alarms every 2 seconds for more precision
     alarmCheckInterval.current = setInterval(async () => {
       try {
+        // Pause monitoring when alarm modal is active to avoid interference
+        if (isAlarmModalActive) {
+          console.log('🔇 Alarm modal is active - pausing background monitoring to avoid interference');
+          return;
+        }
+        
         const activeAlarm = await alarmService.getActiveAlarm();
         if (activeAlarm) {
           const now = Date.now();
           const alarmTime = activeAlarm.scheduledFor;
           const endTime = activeAlarm.endTimeTimestamp;
+          
+          // Check if alarm is currently playing - if so, reduce monitoring frequency
+          const isAlarmPlaying = alarmService.isAlarmPlaying;
+          if (isAlarmPlaying) {
+            console.log('🔇 Alarm is playing - reducing monitoring to avoid interference with puzzle solving');
+            // Only check for end time when alarm is playing
+            if (endTime && now >= endTime) {
+              console.log('⏰ END TIME REACHED! App.tsx stopping alarm automatically...');
+              
+              try {
+                await alarmService.forceStopEverything();
+                console.log('✅ App.tsx: All alarm components stopped');
+              } catch (error) {
+                console.error('❌ Error stopping alarm in App.tsx:', error);
+              }
+            }
+            return; // Skip further checks when alarm is playing
+          }
           
           // Check if end time has been reached - stop alarm if it's playing
           if (endTime && now >= endTime) {
