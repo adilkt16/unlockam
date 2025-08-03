@@ -9,6 +9,7 @@ import HomeScreen from './screens/HomeScreen';
 import SettingsScreen from './screens/SettingsScreen';
 import { AlarmService } from './services/AlarmService';
 import { LoadingScreen } from './components/LoadingScreen';
+import OnboardingFlow from './components/OnboardingFlow';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,16 +19,28 @@ export default function App() {
   const alarmService = AlarmService.getInstance();
   const alarmCheckInterval = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const colorScheme = useColorScheme();
 
   useEffect(() => {
+    // Configure notification behavior (for when permissions are granted)
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
     // Set up notification categories for alarm actions
     setupNotificationCategories();
     
     // Start continuous alarm monitoring
     startAlarmMonitoring();
     
-    // Set up notification listeners
+    // Set up notification listeners (for when permissions are available)
     const notificationListener = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
       
@@ -81,8 +94,6 @@ export default function App() {
             // Nuclear option: Stop everything immediately
             try {
               await alarmService.forceStopEverything();
-              await Notifications.cancelAllScheduledNotificationsAsync();
-              await Notifications.dismissAllNotificationsAsync();
               
               console.log('✅ App.tsx: All alarm components stopped');
             } catch (error) {
@@ -115,19 +126,7 @@ export default function App() {
         navigationRef.current.navigate('Home', { triggerAlarm: true });
       }
       
-      // Send additional high-priority notification
-      await Notifications.presentNotificationAsync({
-        title: '🚨 ALARM RINGING!',
-        body: 'Wake up! Solve the puzzle to stop the alarm!',
-        sound: 'default',
-        priority: Notifications.AndroidNotificationPriority.MAX,
-        vibrate: [0, 1000, 500, 1000, 500, 1000],
-        data: { 
-          type: 'alarm_active',
-          timestamp: Date.now(),
-          fullScreen: true
-        },
-      });
+      console.log('🚨 Full alarm experience activated (no notifications needed)');
       
     } catch (error) {
       console.error('Failed to trigger full alarm experience:', error);
@@ -135,22 +134,26 @@ export default function App() {
   };
 
   const setupNotificationCategories = async () => {
-    await Notifications.setNotificationCategoryAsync('ALARM_CATEGORY', [
-      {
-        identifier: 'STOP_ALARM',
-        buttonTitle: 'Stop Alarm',
-        options: {
-          opensAppToForeground: true,
+    try {
+      await Notifications.setNotificationCategoryAsync('ALARM_CATEGORY', [
+        {
+          identifier: 'STOP_ALARM',
+          buttonTitle: 'Stop Alarm',
+          options: {
+            opensAppToForeground: true,
+          },
         },
-      },
-      {
-        identifier: 'SNOOZE_ALARM',
-        buttonTitle: 'Snooze',
-        options: {
-          opensAppToForeground: false,
+        {
+          identifier: 'SNOOZE_ALARM',
+          buttonTitle: 'Snooze',
+          options: {
+            opensAppToForeground: false,
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      console.log('Notification categories setup skipped (no permission)');
+    }
   };
 
   const handleAlarmNotification = () => {
@@ -188,12 +191,27 @@ export default function App() {
   };
 
   const handleLoadingComplete = () => {
+    console.log('🚀 App: Loading complete, setting showOnboarding to true');
     setIsLoading(false);
+    // Show onboarding after loading is complete
+    setShowOnboarding(true);
+  };
+
+  const handleOnboardingComplete = () => {
+    console.log('✅ App: Onboarding complete, hiding onboarding flow');
+    setShowOnboarding(false);
   };
 
   // Show loading screen while app is initializing
   if (isLoading) {
+    console.log('📱 App: Showing loading screen');
     return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
+
+  console.log('📱 App: Rendering main app, showOnboarding =', showOnboarding);
+
+  if (showOnboarding) {
+    console.log('🎯 App: OnboardingFlow should be rendered');
   }
 
   return (
@@ -228,6 +246,11 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
+      
+      {/* Onboarding Flow */}
+      {showOnboarding && (
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
+      )}
     </SafeAreaProvider>
   );
 }

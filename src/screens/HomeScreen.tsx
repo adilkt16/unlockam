@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import TimeSettingsCard from '../components/TimeSettingsCard';
 import AlarmModal from '../components/AlarmModal';
 import TimePickerModal from '../components/TimePickerModal';
+import DooaStatusCard from '../components/DooaStatusCard';
+import OnboardingDebugPanel from '../components/OnboardingDebugPanel';
 import { AlarmService } from '../services/AlarmService';
 import { PermissionChecker } from '../services/PermissionChecker';
 import { generateMathPuzzle, generatePatternPuzzle } from '../utils/puzzleGenerator';
@@ -243,7 +245,7 @@ export default function HomeScreen() {
           [{ text: 'OK' }]
         );
       } else {
-        Alert.alert('Error', 'Failed to set daily alarm. Please check notification permissions.');
+        Alert.alert('Error', 'Failed to set daily alarm. Please try again.');
       }
     } else {
       await alarmService.cancelAndDisableDailyAlarm();
@@ -347,6 +349,12 @@ export default function HomeScreen() {
               <Ionicons name="settings-outline" size={24} color="#6b7280" />
             </TouchableOpacity>
           </View>
+
+        {/* DOOA Permission Status Card */}
+        <DooaStatusCard />
+
+        {/* Debug Panel - Remove this in production */}
+        <OnboardingDebugPanel />
 
         {/* Countdown Display */}
         <View style={styles.countdownCard}>

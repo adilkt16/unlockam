@@ -1,9 +1,7 @@
-import * as Notifications from 'expo-notifications';
 import { Platform, Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PermissionStatus {
-  notifications: boolean;
   backgroundFetch: boolean;
   systemAlertWindow: boolean;
   batteryOptimization: boolean;
@@ -23,23 +21,6 @@ export interface PermissionRequest {
 }
 
 export const PERMISSION_REQUESTS: PermissionRequest[] = [
-  {
-    type: 'notifications',
-    title: 'Notifications',
-    description: 'Essential for alarm functionality. Without this, your alarms will not work.',
-    importance: 'critical',
-    icon: 'notifications-outline',
-    instructions: [
-      'Allow notifications when prompted',
-      'If denied, go to Settings > Apps > UnlockAM > Notifications',
-      'Enable "Allow notifications"'
-    ],
-    androidInstructions: [
-      'Tap "Allow" when prompted',
-      'Go to Settings > Apps > UnlockAM > Notifications',
-      'Enable all notification categories'
-    ]
-  },
   {
     type: 'systemAlertWindow',
     title: 'Display Over Other Apps',
@@ -148,7 +129,6 @@ export class PermissionChecker {
   }
 
   async checkAllPermissions(): Promise<PermissionStatus> {
-    const notifications = await this.checkNotificationPermission();
     const backgroundFetch = await this.checkBackgroundFetchPermission();
     const systemAlertWindow = await this.checkSystemAlertWindowPermission();
     const batteryOptimization = await this.checkBatteryOptimizationPermission();
@@ -156,7 +136,6 @@ export class PermissionChecker {
     const vibration = await this.checkVibrationPermission();
 
     return {
-      notifications,
       backgroundFetch,
       systemAlertWindow,
       batteryOptimization,
@@ -165,20 +144,13 @@ export class PermissionChecker {
     };
   }
 
-  async checkNotificationPermission(): Promise<boolean> {
-    try {
-      const { status } = await Notifications.getPermissionsAsync();
-      return status === 'granted';
-    } catch (error) {
-      console.error('Error checking notification permission:', error);
-      return false;
-    }
-  }
+  // No longer checking notification permissions
+  // Using timer-based alarm system instead of notifications
 
   async checkBackgroundFetchPermission(): Promise<boolean> {
     // For React Native/Expo, background fetch is generally available
-    // The main concern is notifications permission
-    return await this.checkNotificationPermission();
+    // No longer dependent on notification permissions
+    return true; // Assume background fetch is available
   }
 
   async checkSystemAlertWindowPermission(): Promise<boolean> {

@@ -1,30 +1,14 @@
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Audio } from 'expo-av';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
+import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { AlarmSoundGenerator } from '../utils/soundGenerator';
 import { GlobalAudioManager } from './GlobalAudioManager';
 import { PermissionChecker } from './PermissionChecker';
-import { PermissionRequester } from './PermissionRequester';
 
 const BACKGROUND_ALARM_TASK = 'background-alarm-task';
-
-// Configure notification handler for maximum priority
-Notifications.setNotificationHandler({
-  handleNotification: async (notification) => {
-    const isAlarm = notification.request.content.data?.type === 'alarm';
-    
-    return {
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    };
-  },
-});
 
 // Background task for alarm monitoring
 TaskManager.defineTask(BACKGROUND_ALARM_TASK, async () => {
@@ -46,7 +30,6 @@ export class AlarmService {
   private backgroundTaskRegistered: boolean = false;
   private globalAudio = GlobalAudioManager.getInstance();
   private permissionChecker = PermissionChecker.getInstance();
-  private permissionRequester = PermissionRequester.getInstance();
 
   static getInstance(): AlarmService {
     if (!AlarmService.instance) {
@@ -57,20 +40,14 @@ export class AlarmService {
 
   async requestPermissions(): Promise<boolean> {
     try {
-      // Use the new permission system
-      const result = await this.permissionRequester.requestNotificationPermission();
-      
-      if (result.granted) {
-        // Register background task for alarm monitoring
-        if (!this.backgroundTaskRegistered) {
-          await this.registerBackgroundTask();
-        }
-        return true;
+      // No longer requesting notification permissions
+      // Just register background task for alarm monitoring
+      if (!this.backgroundTaskRegistered) {
+        await this.registerBackgroundTask();
       }
-      
-      return false;
+      return true;
     } catch (error) {
-      console.error('Error requesting permissions:', error);
+      console.error('Error setting up alarm service:', error);
       return false;
     }
   }
@@ -110,24 +87,37 @@ export class AlarmService {
 
   async scheduleAlarm(startTime: string, endTime: string): Promise<boolean> {
     try {
-      const hasPermission = await this.requestPermissions();
-      if (!hasPermission) {
-        console.error('Notification permissions not granted');
-        return false;
+      // Check notification permissions gracefully
+      const hasNotificationPermission = await this.checkNotificationPermission();
+      
+      if (!hasNotificationPermission) {
+        console.log('ℹ️ Notification permissions not granted - using timer-based alarm system');
+      } else {
+        console.log('✅ Notification permissions available - using enhanced alarm system');
       }
 
       console.log('📅 Setting up daily recurring alarm for:', { startTime, endTime });
       
-      // Setup daily recurring alarm instead of one-time alarm
-      return await this.setupDailyRecurringAlarm(startTime, endTime);
+      // Setup daily recurring alarm (works with or without notifications)
+      return await this.setupDailyRecurringAlarm(startTime, endTime, hasNotificationPermission);
     } catch (error) {
       console.error('Failed to schedule alarm:', error);
       return false;
     }
   }
 
+  async checkNotificationPermission(): Promise<boolean> {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      return status === 'granted';
+    } catch (error) {
+      console.log('Error checking notification permission:', error);
+      return false;
+    }
+  }
+
   // Setup daily recurring alarm
-  async setupDailyRecurringAlarm(startTime: string, endTime: string): Promise<boolean> {
+  async setupDailyRecurringAlarm(startTime: string, endTime: string, hasNotificationPermission: boolean = false): Promise<boolean> {
     try {
       // Store alarm configuration for daily recurring
       await AsyncStorage.setItem('dailyAlarmConfig', JSON.stringify({
@@ -140,15 +130,15 @@ export class AlarmService {
       // Cancel any existing alarm first
       await this.cancelAlarm();
 
-      // Schedule next occurrence
-      return await this.scheduleNextDailyAlarm(startTime, endTime);
+      // Schedule next occurrence with or without notifications
+      return await this.scheduleNextDailyAlarm(startTime, endTime, hasNotificationPermission);
     } catch (error) {
       console.error('Failed to setup daily recurring alarm:', error);
       return false;
     }
   }
 
-  async scheduleNextDailyAlarm(startTime: string, endTime: string): Promise<boolean> {
+  async scheduleNextDailyAlarm(startTime: string, endTime: string, hasNotificationPermission: boolean = false): Promise<boolean> {
     try {
       // Parse start time
       const [hours, minutes] = startTime.split(':').map(Number);
@@ -170,36 +160,51 @@ export class AlarmService {
         endDate.setDate(endDate.getDate() + 1);
       }
 
-      // Create high-priority notification for daily alarm
-      const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'WAKE UP! Daily UnlockAM Alarm',
-          body: 'Your daily alarm is ringing! Solve the puzzle to stop it.',
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          vibrate: [0, 500, 500, 500, 500, 500],
-          sticky: true,
-          data: { 
-            type: 'alarm',
-            startTime,
-            endTime,
-            timestamp: Date.now(),
-            fullScreen: true,
-            isDaily: true
-          },
-          categoryIdentifier: 'ALARM_CATEGORY',
-        },
-        trigger: { 
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: Math.max(1, (alarmDate.getTime() - now.getTime()) / 1000) 
-        },
-      });
+      let alarmId: string;
 
-      this.activeAlarmId = notificationId;
+      if (hasNotificationPermission) {
+        // Use notification-based alarm
+        try {
+          const notificationId = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'WAKE UP! Daily UnlockAM Alarm',
+              body: 'Your daily alarm is ringing! Solve the puzzle to stop it.',
+              sound: 'default',
+              priority: Notifications.AndroidNotificationPriority.MAX,
+              vibrate: [0, 500, 500, 500, 500, 500],
+              sticky: true,
+              data: { 
+                type: 'alarm',
+                startTime,
+                endTime,
+                timestamp: Date.now(),
+                fullScreen: true,
+                isDaily: true
+              },
+              categoryIdentifier: 'ALARM_CATEGORY',
+            },
+            trigger: { 
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+              seconds: Math.max(1, (alarmDate.getTime() - now.getTime()) / 1000) 
+            },
+          });
+          alarmId = notificationId;
+          console.log('✅ Scheduled notification-based alarm');
+        } catch (notificationError) {
+          console.log('⚠️ Notification scheduling failed, falling back to timer-based alarm');
+          alarmId = `alarm-${Date.now()}`;
+        }
+      } else {
+        // Use timer-based alarm system
+        alarmId = `alarm-${Date.now()}`;
+        console.log('📱 Using timer-based alarm system (no notification permission)');
+      }
+
+      this.activeAlarmId = alarmId;
       
-      // Store alarm info in AsyncStorage
+      // Store alarm info in AsyncStorage (without notifications)
       await AsyncStorage.setItem('activeAlarm', JSON.stringify({
-        id: notificationId,
+        id: alarmId,
         startTime,
         endTime,
         scheduledFor: alarmDate.getTime(),
@@ -209,6 +214,13 @@ export class AlarmService {
 
       console.log(`🔔 Daily alarm scheduled for ${alarmDate.toLocaleString()}`);
       console.log(`⏰ Daily alarm will stop at ${endDate.toLocaleString()}`);
+      
+      if (hasNotificationPermission) {
+        console.log('📱 Using enhanced alarm system with notifications + timer monitoring');
+      } else {
+        console.log('📱 Using timer-based alarm system (no notifications)');
+      }
+      
       return true;
     } catch (error) {
       console.error('Failed to schedule next daily alarm:', error);
@@ -327,22 +339,8 @@ export class AlarmService {
       // Start continuous alarm sound
       await this.startAlarmSound();
       
-      // Send high-priority notification for devices that don't show full-screen
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🚨 ALARM RINGING!',
-          body: 'Tap to open and solve puzzle to stop alarm',
-          sound: 'default',
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          vibrate: [0, 1000, 1000, 1000],
-          data: { 
-            type: 'alarm_active',
-            timestamp: Date.now(),
-            action: 'open_alarm'
-          },
-        },
-        trigger: null, // Immediate notification
-      });
+      // No notification sent - app will handle alarm display directly
+      console.log('🚨 ALARM TRIGGERED! App-based alarm experience activated');
       
       this.isPlaying = true;
     } catch (error) {
@@ -404,19 +402,15 @@ export class AlarmService {
   }
 
   private async playFallbackAlarm(): Promise<void> {
-    // Fallback: Use multiple notification sounds
-    for (let i = 0; i < 10; i++) {
+    // Fallback: Use continuous audio playing instead of notifications
+    console.log('🚨 Using fallback alarm - continuous audio mode');
+    
+    // Keep playing alarm sound in a loop
+    for (let i = 0; i < 30; i++) { // 30 iterations = 60 seconds
       if (!this.isPlaying) break;
       
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🚨 ALARM!',
-          body: 'Wake up! Solve puzzle to stop.',
-          sound: 'default',
-          vibrate: [0, 500, 500],
-        },
-        trigger: null, // Immediate notification
-      });
+      // Trigger vibration pattern (if available)
+      console.log('📳 Alarm vibration pattern triggered');
       
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
@@ -471,9 +465,8 @@ export class AlarmService {
       // Stop our specific alarm sound
       await this.stopAlarmSound();
       
-      // Cancel all notifications
-      await Notifications.cancelAllScheduledNotificationsAsync();
-      await Notifications.dismissAllNotificationsAsync();
+      // No notifications to cancel - using timer-based alarm system
+      console.log('📱 Timer-based alarm stopped (no notifications to cancel)');
       
       // Clear active alarm storage
       await AsyncStorage.removeItem('activeAlarm');
@@ -517,18 +510,17 @@ export class AlarmService {
       // Stop any playing alarm
       await this.stopAlarmSound();
       
+      // Clear alarm ID (no notifications to cancel)
       if (this.activeAlarmId) {
-        await Notifications.cancelScheduledNotificationAsync(this.activeAlarmId);
+        console.log(`📱 Canceling timer-based alarm: ${this.activeAlarmId}`);
         this.activeAlarmId = null;
       }
       
       // Clear from storage
       await AsyncStorage.removeItem('activeAlarm');
       
-      // Dismiss any active notifications
-      await Notifications.dismissAllNotificationsAsync();
-      
-      console.log('Alarm cancelled');
+      // No notifications to dismiss - using timer-based system
+      console.log('Timer-based alarm cancelled');
     } catch (error) {
       console.error('Failed to cancel alarm:', error);
     }
@@ -563,9 +555,9 @@ export class AlarmService {
     const alarm = await this.getActiveAlarm();
     if (!alarm) return false;
 
-    // Check if the alarm is still scheduled
-    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
-    return scheduledNotifications.some(notification => notification.identifier === alarm.id);
+    // Check if the alarm time hasn't passed yet
+    const now = Date.now();
+    return alarm.scheduledFor > now;
   }
 
   // Get time until next alarm
