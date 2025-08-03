@@ -16,8 +16,6 @@ import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAudio } from '../hooks/useAudio';
 import { AlarmSoundGenerator } from '../utils/soundGenerator';
-import { PermissionChecker } from '../services/PermissionChecker';
-import PermissionStatusDashboard from '../components/PermissionStatusDashboard';
 import TroubleshootingScreen from '../components/TroubleshootingScreen';
 
 export default function SettingsScreen() {
@@ -28,63 +26,15 @@ export default function SettingsScreen() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
   const [alarmSoundType, setAlarmSoundType] = useState<string>(AlarmSoundGenerator.ALARM_TYPES.CLASSIC);
-  const [currentView, setCurrentView] = useState<'settings' | 'permissions' | 'troubleshooting'>('settings');
-  const [permissionStatus, setPermissionStatus] = useState<'ready' | 'needs-setup' | 'checking'>('checking');
+  const [currentView, setCurrentView] = useState<'settings' | 'troubleshooting'>('settings');
   const { testAlarmSound } = useAudio();
-
-  const permissionChecker = PermissionChecker.getInstance();
 
   useEffect(() => {
     loadSettings();
-    checkPermissionStatus();
-    
-    // Listen for app state changes to refresh permissions when returning from settings
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'active') {
-        // App became active, refresh permission status
-        checkPermissionStatus();
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    return () => {
-      subscription?.remove();
-    };
+    // ...existing code...
   }, []);
 
-  const checkPermissionStatus = async () => {
-    try {
-      console.log('Checking permission status from settings screen...');
-      // Use refreshPermissions to ensure we get fresh data
-      await permissionChecker.refreshPermissions();
-      const isReady = await permissionChecker.isReadyForAlarms();
-      setPermissionStatus(isReady ? 'ready' : 'needs-setup');
-      console.log('Permission status updated:', isReady ? 'ready' : 'needs-setup');
-    } catch (error) {
-      console.error('Error checking permission status:', error);
-      setPermissionStatus('needs-setup');
-    }
-  };
-
-  const handlePermissionReset = async () => {
-    Alert.alert(
-      'Reset App Data',
-      'This will reset all app tracking data and start fresh. Use this if you want to reset the permission detection system.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset',
-          style: 'destructive',
-          onPress: async () => {
-            await permissionChecker.resetAllPermissionStates();
-            checkPermissionStatus();
-            Alert.alert('Reset Complete', 'App data has been reset. Permission detection will start fresh.');
-          }
-        }
-      ]
-    );
-  };
+  // ...existing code...
 
   const loadSettings = async () => {
     try {
@@ -357,66 +307,7 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </SettingSection>
 
-      <SettingSection title="Permissions & Setup">
-        <SettingRow
-          icon="shield-checkmark"
-          title="App Permissions"
-          subtitle={
-            permissionStatus === 'ready' 
-              ? "All permissions granted" 
-              : permissionStatus === 'needs-setup'
-              ? "Some permissions need setup"
-              : "Checking permissions..."
-          }
-        >
-          <View style={styles.permissionButtonContainer}>
-            <TouchableOpacity
-              style={[
-                styles.permissionButton,
-                permissionStatus === 'ready' && styles.permissionButtonReady,
-                permissionStatus === 'needs-setup' && styles.permissionButtonNeedsSetup
-              ]}
-              onPress={() => setCurrentView('permissions')}
-            >
-              <Ionicons 
-                name={permissionStatus === 'ready' ? "checkmark-circle" : "settings"} 
-                size={16} 
-                color={permissionStatus === 'ready' ? "#22c55e" : "#f59e0b"} 
-              />
-              <Text style={[
-                styles.permissionButtonText,
-                permissionStatus === 'ready' && styles.permissionButtonTextReady,
-                permissionStatus === 'needs-setup' && styles.permissionButtonTextNeedsSetup
-              ]}>
-                {permissionStatus === 'ready' ? "View Status" : "Setup"}
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.refreshButton}
-              onPress={checkPermissionStatus}
-              onLongPress={handlePermissionReset}
-              delayLongPress={1000}
-            >
-              <Ionicons name="refresh" size={16} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
-        </SettingRow>
-
-        <SettingRow
-          icon="help-circle"
-          title="Troubleshooting"
-          subtitle="Fix common alarm issues"
-        >
-          <TouchableOpacity
-            style={styles.troubleshootButton}
-            onPress={() => setCurrentView('troubleshooting')}
-          >
-            <Text style={styles.troubleshootButtonText}>Help</Text>
-            <Ionicons name="arrow-forward" size={16} color="#3b82f6" />
-          </TouchableOpacity>
-        </SettingRow>
-      </SettingSection>
+      {/* Permissions & Setup section removed as requested */}
 
       <SettingSection title="Data">
         <TouchableOpacity style={styles.actionButton} onPress={resetStats}>
@@ -438,9 +329,7 @@ export default function SettingsScreen() {
       </ScrollView>
         )}
         
-        {currentView === 'permissions' && (
-          <PermissionStatusDashboard />
-        )}
+        {/* PermissionsStatusDashboard removed as requested */}
         
         {currentView === 'troubleshooting' && (
           <TroubleshootingScreen />
