@@ -217,26 +217,6 @@ export default function HomeScreen() {
     }
   };
 
-  // Debug function to check what's in AsyncStorage
-  const debugAsyncStorage = async () => {
-    try {
-      const allKeys = await AsyncStorage.getAllKeys();
-      const allData = await AsyncStorage.multiGet(allKeys);
-      console.log('🔍 All AsyncStorage data:', allData);
-      
-      const startTime = await AsyncStorage.getItem('startTime');
-      const endTime = await AsyncStorage.getItem('endTime');
-      console.log('🕐 Current saved times:', { startTime, endTime });
-      
-      Alert.alert(
-        'Debug Info',
-        `Saved Start Time: ${startTime}\nSaved End Time: ${endTime}`,
-        [{ text: 'OK' }]
-      );
-    } catch (error) {
-      console.error('Debug error:', error);
-    }
-  };
 
   const handleOpenTimePicker = (type: 'start' | 'end') => {
     setTimePickerType(type);
@@ -393,15 +373,7 @@ export default function HomeScreen() {
         )}
 
         {/* Test Buttons */}
-        <View style={styles.testContainer}>
-          <TouchableOpacity
-            style={[styles.testAlarmButton, { backgroundColor: '#16a34a' }]}
-            onPress={debugAsyncStorage}
-          >
-            <Ionicons name="bug" size={20} color="white" />
-            <Text style={[styles.testAlarmButtonText, { color: 'white' }]}>Debug Storage</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Debug Storage button removed as requested */}
       </ScrollView>
 
       {/* Modals */}
