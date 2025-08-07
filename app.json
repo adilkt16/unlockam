@@ -62,8 +62,6 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "runtimeVersion": {
-      "policy": "sdkVersion"
-    }
+    "runtimeVersion": "1.0.0"
   }
 }
