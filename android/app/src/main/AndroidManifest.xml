@@ -42,5 +42,20 @@
         <data android:scheme="exp+unlockam-mobile-devbuild"/>
       </intent-filter>
     </activity>
+    
+    <!-- Bulletproof Alarm Service for locked-state audio playback -->
+    <service
+      android:name=".alarmmodule.AndroidAlarmAudioService"
+      android:enabled="true"
+      android:exported="false"
+      android:foregroundServiceType="mediaPlayback"
+      android:stopWithTask="false" />
+    
+    <!-- Alarm Receiver for scheduled alarms -->
+    <receiver
+      android:name=".alarmmodule.AlarmReceiver"
+      android:enabled="true"
+      android:exported="false" />
+      
   </application>
 </manifest>

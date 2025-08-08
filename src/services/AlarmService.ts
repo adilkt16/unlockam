@@ -7,6 +7,7 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { AlarmSoundGenerator } from '../utils/soundGenerator';
 import { GlobalAudioManager } from './GlobalAudioManager';
 import { PermissionChecker } from './PermissionChecker';
+import { BulletproofAlarmService } from './BulletproofAlarmService';
 
 const BACKGROUND_ALARM_TASK = 'background-alarm-task';
 
@@ -30,6 +31,7 @@ export class AlarmService {
   private backgroundTaskRegistered: boolean = false;
   private globalAudio = GlobalAudioManager.getInstance();
   private permissionChecker = PermissionChecker.getInstance();
+  private bulletproofService = BulletproofAlarmService.getInstance();
 
   static getInstance(): AlarmService {
     if (!AlarmService.instance) {
@@ -338,20 +340,26 @@ export class AlarmService {
 
   async triggerFullScreenAlarm(): Promise<void> {
     try {
-      console.log('Triggering full-screen alarm experience');
+      console.log('Triggering bulletproof alarm experience');
       
       // Keep device awake
       await activateKeepAwakeAsync();
       
-      // Start continuous alarm sound
+      // Use bulletproof alarm service for guaranteed playback
+      const alarm = await this.getActiveAlarm();
+      if (alarm) {
+        console.log('🚨 TRIGGERING BULLETPROOF ALARM - Guaranteed locked-state playback!');
+        await this.bulletproofService.triggerBulletproofAlarm();
+      }
+      
+      // Also start traditional alarm sound as backup
       await this.startAlarmSound();
       
-      // No notification sent - app will handle alarm display directly
-      console.log('🚨 ALARM TRIGGERED! App-based alarm experience activated');
+      console.log('🚨 ALARM TRIGGERED! Bulletproof alarm system activated');
       
       this.isPlaying = true;
     } catch (error) {
-      console.error('Failed to trigger full-screen alarm:', error);
+      console.error('Failed to trigger bulletproof alarm:', error);
     }
   }
 
@@ -425,6 +433,9 @@ export class AlarmService {
 
   async stopAlarmSound(): Promise<void> {
     try {
+      // Stop bulletproof alarm service
+      await this.bulletproofService.stopAlarm();
+      
       if (this.alarmSound) {
         this.globalAudio.unregisterSound(this.alarmSound);
         await this.alarmSound.stopAsync();
@@ -449,7 +460,7 @@ export class AlarmService {
       // Release wake lock
       deactivateKeepAwake();
       
-      console.log('Alarm sound stopped');
+      console.log('Alarm sound stopped (including bulletproof service)');
     } catch (error) {
       console.error('Failed to stop alarm sound:', error);
     }
@@ -465,6 +476,9 @@ export class AlarmService {
       const isDailyAlarm = activeAlarm?.isDaily;
       
       console.log('🔍 Active alarm check:', { activeAlarm, isDailyAlarm });
+      
+      // Stop bulletproof alarm service first
+      await this.bulletproofService.stopAlarm();
       
       // Use GlobalAudioManager to stop ALL sounds across the entire app
       await this.globalAudio.stopAllSounds();
