@@ -56,7 +56,15 @@ export class NativeModuleDebugger {
 
     try {
       console.log('📞 Calling AndroidAlarmAudio.playLockedStateAlarm...');
-      const result = await NativeModules.AndroidAlarmAudio.playLockedStateAlarm();
+      const testOptions = {
+        alarmId: 'debug_test',
+        soundType: 'default',
+        volume: 1.0,
+        vibration: true,
+        showOverLockscreen: true,
+        wakeScreen: true
+      };
+      const result = await NativeModules.AndroidAlarmAudio.playLockedStateAlarm(testOptions);
       console.log('✅ Native service call successful:', result);
       return true;
     } catch (error) {
