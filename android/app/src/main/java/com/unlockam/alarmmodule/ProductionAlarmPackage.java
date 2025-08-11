@@ -21,11 +21,8 @@ public class ProductionAlarmPackage implements ReactPackage {
     public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
         List<NativeModule> modules = new ArrayList<>();
         
-        // Register production alarm module
+        // Register production alarm module only
         modules.add(new ProductionAlarmModule(reactContext));
-        
-        // Also register legacy module for compatibility
-        modules.add(new AndroidAlarmAudioModule(reactContext));
         
         return modules;
     }

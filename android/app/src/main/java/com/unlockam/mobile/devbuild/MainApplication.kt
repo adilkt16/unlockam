@@ -26,10 +26,10 @@ class MainApplication : Application(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
+            // Add legacy alarm module for backward compatibility  
+            packages.add(AndroidAlarmAudioPackage())
             // Add production alarm package for reliable background alarms
             packages.add(ProductionAlarmPackage())
-            // Keep legacy package for compatibility
-            packages.add(AndroidAlarmAudioPackage())
             return packages
           }
 
