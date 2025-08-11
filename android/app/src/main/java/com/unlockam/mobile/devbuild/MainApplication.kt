@@ -16,6 +16,7 @@ import com.facebook.soloader.SoLoader
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 import com.unlockam.alarmmodule.AndroidAlarmAudioPackage
+import com.unlockam.alarmmodule.ProductionAlarmPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -25,6 +26,9 @@ class MainApplication : Application(), ReactApplication {
           override fun getPackages(): List<ReactPackage> {
             val packages = PackageList(this).packages
             // Packages that cannot be autolinked yet can be added manually here, for example:
+            // Add production alarm package for reliable background alarms
+            packages.add(ProductionAlarmPackage())
+            // Keep legacy package for compatibility
             packages.add(AndroidAlarmAudioPackage())
             return packages
           }

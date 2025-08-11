@@ -1,20 +1,40 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Core Android permissions for production-ready alarm system -->
+  
+  <!-- Essential alarm permissions -->
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+  
+  <!-- Audio playback permissions -->
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+  <uses-permission android:name="android.permission.VIBRATE"/>
+  
+  <!-- Foreground service permissions -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
   <uses-permission android:name="android.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND"/>
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
-  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+  
+  <!-- Full screen and lockscreen permissions -->
   <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-  <uses-permission android:name="android.permission.VIBRATE"/>
-  <uses-permission android:name="android.permission.WAKE_LOCK"/>
+  <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+  <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
+  <uses-permission android:name="android.permission.SHOW_WHEN_LOCKED"/>
+  <uses-permission android:name="android.permission.TURN_SCREEN_ON"/>
+  
+  <!-- Battery optimization permissions -->
+  <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+  <uses-permission android:name="android.permission.DEVICE_POWER"/>
+  
+  <!-- Notification permissions (Android 13+) -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+  
+  <!-- Storage and other app permissions -->
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>
@@ -33,6 +53,8 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATE_URL" android:value="https://u.expo.dev/c9e53338-b26c-4457-b405-9674f50f2c72"/>
+    
+    <!-- Main Activity -->
     <activity android:name=".MainActivity" android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:theme="@style/Theme.App.SplashScreen" android:exported="true" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
@@ -45,7 +67,88 @@
         <data android:scheme="exp+unlockam-mobile-devbuild"/>
       </intent-filter>
     </activity>
-    <service android:name=".alarmmodule.AndroidAlarmAudioService" android:enabled="true" android:exported="false" android:foregroundServiceType="mediaPlayback" android:stopWithTask="false"/>
-    <receiver android:name=".alarmmodule.AlarmReceiver" android:enabled="true" android:exported="false"/>
+    
+    <!-- Production-Ready Alarm Activity for Full Screen UI -->
+    <activity 
+        android:name=".alarmmodule.ProductionAlarmActivity"
+        android:theme="@style/Theme.AppCompat.Translucent"
+        android:showOnLockScreen="true"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:excludeFromRecents="true"
+        android:taskAffinity=""
+        android:launchMode="singleInstance"
+        android:exported="false">
+      <!-- Intent filters for alarm triggering -->
+      <intent-filter>
+        <action android:name="com.unlockam.ALARM_TRIGGERED"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+      </intent-filter>
+    </activity>
+    
+    <!-- Legacy Alarm Activity (fallback) -->
+    <activity 
+        android:name=".alarmmodule.AlarmActivity"
+        android:theme="@style/Theme.AppCompat.Translucent"
+        android:showOnLockScreen="true"
+        android:showWhenLocked="true"
+        android:turnScreenOn="true"
+        android:excludeFromRecents="true"
+        android:exported="false"/>
+    
+    <!-- Production Alarm Service - Critical for reliable playback -->
+    <service 
+        android:name=".alarmmodule.ProductionAlarmService" 
+        android:enabled="true" 
+        android:exported="false" 
+        android:foregroundServiceType="mediaPlayback" 
+        android:stopWithTask="false"
+        android:description="@string/alarm_service_description">
+      <!-- Service handles alarm audio even in Doze mode -->
+    </service>
+    
+    <!-- Legacy Alarm Service (for compatibility) -->
+    <service 
+        android:name=".alarmmodule.AndroidAlarmAudioService" 
+        android:enabled="true" 
+        android:exported="false" 
+        android:foregroundServiceType="mediaPlayback" 
+        android:stopWithTask="false"/>
+    
+    <!-- Production Alarm Receiver - Handles system alarm triggers -->
+    <receiver 
+        android:name=".alarmmodule.ProductionAlarmReceiver" 
+        android:enabled="true" 
+        android:exported="false"
+        android:directBootAware="true">
+      <intent-filter android:priority="1000">
+        <action android:name="com.unlockam.ALARM_TRIGGER"/>
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+        <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+        <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+        <action android:name="android.intent.action.PACKAGE_REPLACED"/>
+        <data android:scheme="package"/>
+      </intent-filter>
+    </receiver>
+    
+    <!-- Legacy Alarm Receiver (for compatibility) -->
+    <receiver 
+        android:name=".alarmmodule.AlarmReceiver" 
+        android:enabled="true" 
+        android:exported="false"/>
+        
+    <!-- Boot Receiver - Reschedule alarms after reboot -->
+    <receiver 
+        android:name=".alarmmodule.BootReceiver" 
+        android:enabled="true" 
+        android:exported="false"
+        android:directBootAware="true">
+      <intent-filter android:priority="1000">
+        <action android:name="android.intent.action.BOOT_COMPLETED"/>
+        <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+        <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
+      </intent-filter>
+    </receiver>
   </application>
 </manifest>

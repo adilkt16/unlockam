@@ -3,4 +3,9 @@
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
   <string name="expo_runtime_version">1.0.0</string>
+  
+  <!-- Production Alarm System Strings -->
+  <string name="alarm_service_description">UnlockAM alarm service that ensures alarms play reliably even when the device is in Doze mode or the screen is locked</string>
+  <string name="alarm_notification_channel_name">UnlockAM Alarms</string>
+  <string name="alarm_notification_channel_description">Critical alarm notifications that ensure you wake up on time</string>
 </resources>
