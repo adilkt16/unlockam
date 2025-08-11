@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Platform, NativeModules, DeviceEventEmitter } from 'react-native';
 import { GlobalAudioManager } from './GlobalAudioManager';
+import { NativeModuleDebugger } from '../utils/NativeModuleDebugger';
 
 const { AndroidAlarmAudio } = NativeModules;
 
@@ -93,13 +94,24 @@ export class BulletproofAlarmService {
           await AndroidAlarmAudio.scheduleAlarm({
             alarmId: this.activeAlarmId,
             triggerTime: alarmDate.getTime(),
-            soundType: 'alert',
+            soundType: 'default',
             vibration: true,
             label: 'UnlockAM Alarm',
           });
           console.log('✅ BULLETPROOF: Native Android system alarm scheduled');
+          
+          // Also schedule auto-stop
+          await AndroidAlarmAudio.scheduleAlarm({
+            alarmId: `${this.activeAlarmId}-stop`,
+            triggerTime: endDate.getTime(),
+            soundType: 'default',
+            vibration: false,
+            label: 'UnlockAM Alarm Auto-Stop',
+          });
+          console.log('✅ BULLETPROOF: Auto-stop alarm scheduled');
+          
         } catch (nativeError) {
-          console.log('⚠️ Native alarm failed, using fallbacks:', nativeError);
+          console.log('⚠️ Native alarm scheduling failed, using fallbacks:', nativeError);
         }
       }
 
@@ -187,7 +199,7 @@ export class BulletproofAlarmService {
         try {
           await AndroidAlarmAudio.playLockedStateAlarm({
             alarmId: this.activeAlarmId,
-            soundType: 'alert',
+            soundType: 'default',
             volume: 1.0,
             vibration: true,
             showOverLockscreen: true,
@@ -428,5 +440,135 @@ export class BulletproofAlarmService {
   async cancelAlarm(): Promise<void> {
     await this.stopAlarm();
     console.log('🚨 BULLETPROOF ALARM: Alarm cancelled');
+  }
+
+  /**
+   * TEST FUNCTION: Trigger alarm in specified seconds for testing
+   */
+  async testAlarmInSeconds(seconds: number = 30): Promise<void> {
+    console.log(`🧪 BULLETPROOF TEST: Starting alarm test in ${seconds} seconds...`);
+    
+    const testDate = new Date();
+    testDate.setSeconds(testDate.getSeconds() + seconds);
+    
+    const endDate = new Date(testDate);
+    endDate.setMinutes(endDate.getMinutes() + 2); // Run for 2 minutes max
+    
+    console.log(`🧪 TEST: Alarm will trigger at ${testDate.toLocaleTimeString()}`);
+    console.log(`🧪 TEST: Alarm will auto-stop at ${endDate.toLocaleTimeString()}`);
+    
+    this.activeAlarmId = `test-alarm-${Date.now()}`;
+    
+    // Store test alarm data
+    await AsyncStorage.setItem('bulletproofAlarm', JSON.stringify({
+      id: this.activeAlarmId,
+      startTime: `${testDate.getHours()}:${testDate.getMinutes()}`,
+      endTime: `${endDate.getHours()}:${endDate.getMinutes()}`,
+      scheduledFor: testDate.getTime(),
+      endTimeTimestamp: endDate.getTime(),
+      isTest: true,
+    }));
+
+    // CRITICAL: Use native Android alarm for background reliability
+    if (Platform.OS === 'android' && AndroidAlarmAudio) {
+      try {
+        // Schedule native Android alarm that will work even when app is backgrounded
+        await AndroidAlarmAudio.scheduleAlarm({
+          alarmId: this.activeAlarmId,
+          triggerTime: testDate.getTime(),
+          soundType: 'default',
+          vibration: true,
+          label: 'UnlockAM Test Alarm',
+        });
+        console.log('✅ BULLETPROOF TEST: Native Android alarm scheduled!');
+        
+        // Also schedule stop alarm
+        await AndroidAlarmAudio.scheduleAlarm({
+          alarmId: `${this.activeAlarmId}-stop`,
+          triggerTime: endDate.getTime(),
+          soundType: 'default',
+          vibration: false,
+          label: 'UnlockAM Test Alarm Stop',
+        });
+        console.log('✅ BULLETPROOF TEST: Auto-stop scheduled!');
+        
+      } catch (nativeError) {
+        console.error('❌ Failed to schedule native alarm:', nativeError);
+        // Fallback to JavaScript timer (less reliable)
+        this.startTimerBasedMonitoring(testDate.getTime(), endDate.getTime());
+      }
+    } else {
+      // Fallback for iOS or if native module not available
+      this.startTimerBasedMonitoring(testDate.getTime(), endDate.getTime());
+    }
+
+    // Pre-load audio for immediate playback when alarm triggers
+    await this.preloadAudioResources();
+    
+    console.log('🧪 BULLETPROOF TEST: Test alarm scheduled! The alarm will work even if you:');
+    console.log('📱 Lock your phone');  
+    console.log('📱 Switch to other apps');
+    console.log('📱 Put the phone in your pocket');
+    console.log('🔊 The native Android service will ensure audio plays!');
+  }
+
+  /**
+   * TEST FUNCTION: Trigger alarm immediately for instant testing
+   */
+  async testAlarmNow(): Promise<void> {
+    console.log('🧪 BULLETPROOF TEST: Triggering alarm NOW for immediate test!');
+    
+    // Set a test alarm ID
+    this.activeAlarmId = `immediate-test-${Date.now()}`;
+    
+    // Store test data
+    await AsyncStorage.setItem('bulletproofAlarm', JSON.stringify({
+      id: this.activeAlarmId,
+      startTime: 'immediate',
+      endTime: 'manual',
+      scheduledFor: Date.now(),
+      endTimeTimestamp: Date.now() + 120000, // 2 minutes from now
+      isTest: true,
+    }));
+    
+    // Pre-load audio
+    await this.preloadAudioResources();
+    
+    // Trigger the alarm immediately
+    await this.triggerBulletproofAlarm();
+  }
+
+  /**
+   * TEST FUNCTION: Test native Android service directly (most reliable for locked state)
+   */
+  async testNativeServiceNow(): Promise<void> {
+    console.log('🔍 TESTING NATIVE SERVICE NOW - START');
+    console.log('===============================================');
+    
+    // Use comprehensive debugger
+    const isModuleAvailable = NativeModuleDebugger.testAndroidAlarmAudioAvailability();
+    
+    if (!isModuleAvailable) {
+      console.log('❌ NATIVE MODULE TEST FAILED');
+      console.log('🏗️  This likely means the app needs to be rebuilt with EAS Build or expo run:android');
+      console.log('� Native modules require native compilation, not just Metro bundler refresh');
+      console.log('===============================================');
+      return;
+    }
+
+    // Test the actual service call
+    console.log('� TESTING ACTUAL NATIVE SERVICE CALL...');
+    const callSuccess = await NativeModuleDebugger.testNativeServiceCall();
+    
+    if (callSuccess) {
+      console.log('✅ NATIVE SERVICE TEST SUCCESSFUL!');
+      console.log('🔊 Native AndroidAlarmAudioService should now be playing locked-state alarm');
+    } else {
+      console.log('❌ NATIVE SERVICE CALL FAILED');
+      console.log('🔧 Check AndroidAlarmAudioService implementation and registration');
+    }
+    
+    console.log('===============================================');
+    console.log('🔍 TESTING NATIVE SERVICE NOW - END');
   }
 }

@@ -25,7 +25,7 @@ interface AlarmData {
   enabled: boolean;
   days?: string[];
   label?: string;
-  soundType?: 'beep' | 'chime' | 'alert' | 'custom';
+  soundType?: 'default';
   vibration?: boolean;
   snoozeEnabled?: boolean;
   snoozeInterval?: number;
@@ -203,7 +203,7 @@ export class EnhancedAlarmService {
         try {
           await AndroidAlarmAudio.playLockedStateAlarm({
             alarmId: alarm.id,
-            soundType: alarm.soundType || 'alert',
+            soundType: alarm.soundType || 'default',
             volume: 1.0,
             vibration: alarm.vibration !== false,
             showOverLockscreen: true,
@@ -256,7 +256,7 @@ export class EnhancedAlarmService {
 
   private async playDirectAudioFile(alarm: AlarmData) {
     // This will use local audio files from assets/sounds/
-    const soundFile = this.getSoundFilePath(alarm.soundType || 'alert');
+    const soundFile = this.getSoundFilePath(alarm.soundType || 'default');
     
     if (Platform.OS === 'android' && AndroidAlarmAudio) {
       return AndroidAlarmAudio.playAudioFile({
@@ -271,15 +271,8 @@ export class EnhancedAlarmService {
   }
 
   private getSoundFilePath(soundType: string): string {
-    // Map sound types to actual files in assets/sounds/
-    const soundMap: {[key: string]: string} = {
-      'beep': 'alarm-beep.wav',
-      'chime': 'alarm-chime.wav', 
-      'alert': 'alarm-alert.wav',
-      'custom': 'alarm-custom.wav',
-    };
-    
-    return soundMap[soundType] || soundMap['alert'];
+    // Always return the single alarm sound file
+    return 'alarm-sound.wav';
   }
 
   private async triggerSystemAlarmNotification(alarm: AlarmData) {
@@ -422,7 +415,7 @@ export class EnhancedAlarmService {
             await AndroidAlarmAudio.scheduleNextOccurrence({
               alarmId: alarmId,
               triggerTime: nextTime.getTime(),
-              soundType: alarm.soundType || 'alert',
+              soundType: alarm.soundType || 'default',
             });
           }
         }
@@ -558,7 +551,7 @@ export class EnhancedAlarmService {
           await AndroidAlarmAudio.scheduleAlarm({
             alarmId: alarm.id,
             triggerTime: nextOccurrence.getTime(),
-            soundType: alarm.soundType || 'alert',
+            soundType: alarm.soundType || 'default',
             vibration: alarm.vibration !== false,
             label: alarm.label || 'Alarm',
           });

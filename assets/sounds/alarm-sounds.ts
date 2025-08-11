@@ -1,11 +1,6 @@
-// Audio file placeholders for alarm sounds
-// These should be replaced with actual audio files
-
+// Audio file for alarm sound
 export const AlarmSounds = {
-  'alarm-beep.wav': 'assets/sounds/alarm-beep.wav',
-  'alarm-chime.wav': 'assets/sounds/alarm-chime.wav', 
-  'alarm-alert.wav': 'assets/sounds/alarm-alert.wav',
-  'alarm-custom.wav': 'assets/sounds/alarm-custom.wav',
+  'alarm-sound.wav': 'assets/sounds/alarm-sound.wav',
 };
 
-export const DEFAULT_ALARM_SOUND = 'alarm-alert.wav';
+export const DEFAULT_ALARM_SOUND = 'alarm-sound.wav';

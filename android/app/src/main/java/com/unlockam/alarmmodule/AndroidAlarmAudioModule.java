@@ -11,6 +11,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
+import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
@@ -151,8 +152,15 @@ public class AndroidAlarmAudioModule extends ReactContextBaseJavaModule {
             Intent serviceIntent = new Intent(reactContext, AndroidAlarmAudioService.class);
             serviceIntent.setAction("TRIGGER_VIBRATION");
             
-            // Add vibration pattern data to intent
-            serviceIntent.putExtra("vibrationPattern", options.getArray("pattern"));
+            // Add vibration pattern data to intent - convert ReadableArray to long array
+            if (options.getArray("pattern") != null) {
+                ReadableArray patternArray = options.getArray("pattern");
+                long[] pattern = new long[patternArray.size()];
+                for (int i = 0; i < patternArray.size(); i++) {
+                    pattern[i] = (long) patternArray.getDouble(i);
+                }
+                serviceIntent.putExtra("vibrationPattern", pattern);
+            }
             serviceIntent.putExtra("repeat", options.getBoolean("repeat"));
 
             reactContext.startService(serviceIntent);
@@ -251,9 +259,9 @@ public class AndroidAlarmAudioModule extends ReactContextBaseJavaModule {
     public void testAlarmPlayback(Promise promise) {
         try {
             // Test alarm playback for 3 seconds
-            ReadableMap testOptions = Arguments.createMap();
+            WritableMap testOptions = Arguments.createMap();
             testOptions.putString("alarmId", "test_alarm");
-            testOptions.putString("soundType", "alert");
+            testOptions.putString("soundType", "default");
             testOptions.putDouble("volume", 0.5);
             testOptions.putBoolean("vibration", false);
             testOptions.putBoolean("showOverLockscreen", false);
@@ -274,6 +282,20 @@ public class AndroidAlarmAudioModule extends ReactContextBaseJavaModule {
                                 public void reject(String code, Throwable throwable) {}
                                 @Override
                                 public void reject(String code, String message, Throwable throwable) {}
+                                @Override
+                                public void reject(String code, String message, Throwable throwable, WritableMap errorMap) {}
+                                @Override
+                                public void reject(String code, String message, WritableMap errorMap) {}
+                                @Override
+                                public void reject(String code, Throwable throwable, WritableMap errorMap) {}
+                                @Override
+                                public void reject(String code, WritableMap errorMap) {}
+                                @Override
+                                public void reject(Throwable throwable, WritableMap errorMap) {}
+                                @Override
+                                public void reject(String message) {}
+                                @Override
+                                public void reject(Throwable throwable) {}
                             });
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -286,6 +308,20 @@ public class AndroidAlarmAudioModule extends ReactContextBaseJavaModule {
                 public void reject(String code, Throwable throwable) {}
                 @Override
                 public void reject(String code, String message, Throwable throwable) {}
+                @Override
+                public void reject(String code, String message, Throwable throwable, WritableMap errorMap) {}
+                @Override
+                public void reject(String code, String message, WritableMap errorMap) {}
+                @Override
+                public void reject(String code, Throwable throwable, WritableMap errorMap) {}
+                @Override
+                public void reject(String code, WritableMap errorMap) {}
+                @Override
+                public void reject(Throwable throwable, WritableMap errorMap) {}
+                @Override
+                public void reject(String message) {}
+                @Override
+                public void reject(Throwable throwable) {}
             });
 
             promise.resolve(true);

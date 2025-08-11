@@ -29,13 +29,8 @@ export function useAudio() {
 
   // Get the selected alarm sound type from settings
   const getSelectedAlarmType = useCallback(async (): Promise<string> => {
-    try {
-      const savedAlarmSound = await AsyncStorage.getItem('alarmSoundType');
-      return savedAlarmSound || AlarmSoundGenerator.ALARM_TYPES.CLASSIC;
-    } catch (error) {
-      console.error('Failed to get alarm sound type:', error);
-      return AlarmSoundGenerator.ALARM_TYPES.CLASSIC;
-    }
+    // Always return default since we only have one alarm sound now
+    return AlarmSoundGenerator.ALARM_TYPES.DEFAULT;
   }, []);
 
   // Create alarm tone using multiple approaches

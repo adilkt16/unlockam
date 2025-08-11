@@ -14,13 +14,21 @@ public class AlarmReceiver extends BroadcastReceiver {
         boolean vibration = intent.getBooleanExtra("vibration", true);
         String label = intent.getStringExtra("label");
 
-        // Create intent to start the alarm service
         Intent serviceIntent = new Intent(context, AndroidAlarmAudioService.class);
-        serviceIntent.setAction("PLAY_ALARM");
+        
+        // Handle stop alarm requests
+        if ("stop".equals(soundType)) {
+            serviceIntent.setAction("STOP_ALARM");
+            serviceIntent.putExtra("alarmId", alarmId.replace("-stop", ""));
+        } else {
+            // Handle play alarm requests
+            serviceIntent.setAction("PLAY_ALARM");
+            serviceIntent.putExtra("soundType", soundType);
+            serviceIntent.putExtra("vibration", vibration);
+            serviceIntent.putExtra("label", label);
+        }
+        
         serviceIntent.putExtra("alarmId", alarmId);
-        serviceIntent.putExtra("soundType", soundType);
-        serviceIntent.putExtra("vibration", vibration);
-        serviceIntent.putExtra("label", label);
 
         // Start the alarm service
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

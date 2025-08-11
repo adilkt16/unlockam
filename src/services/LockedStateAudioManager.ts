@@ -5,7 +5,7 @@ import { GlobalAudioManager } from '../services/GlobalAudioManager';
 const { AndroidAlarmAudio } = NativeModules;
 
 interface AudioConfig {
-  soundType: 'beep' | 'chime' | 'alert' | 'custom';
+  soundType: 'default';
   volume?: number;
   loop?: boolean;
   priority?: 'low' | 'normal' | 'high' | 'max';
@@ -181,7 +181,7 @@ export class LockedStateAudioManager {
     try {
       // Play test alarm for 3 seconds
       const success = await this.playAlarmSound({
-        soundType: 'alert',
+        soundType: 'default',
         volume: 0.5,
         loop: false,
       });
@@ -203,15 +203,8 @@ export class LockedStateAudioManager {
   }
 
   private getSoundUri(soundType: string) {
-    // Map sound types to actual audio files
-    const soundMap: {[key: string]: any} = {
-      'beep': require('../../assets/alarm-sound.wav'),
-      'chime': require('../../assets/alarm-sound.wav'), 
-      'alert': require('../../assets/alarm-sound.wav'),
-      'custom': require('../../assets/alarm-sound.wav'),
-    };
-
-    return soundMap[soundType] || soundMap['alert'];
+    // Always return the single alarm sound file
+    return require('../../assets/sounds/alarm-sound.wav');
   }
 
   public get isAlarmPlaying(): boolean {

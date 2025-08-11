@@ -23,6 +23,7 @@ import { PermissionChecker } from '../services/PermissionChecker';
 import { generateMathPuzzle, generatePatternPuzzle } from '../utils/puzzleGenerator';
 import { useAudio } from '../hooks/useAudio';
 import { GlobalAudioManager } from '../services/GlobalAudioManager';
+import { AlarmTester } from '../components/AlarmTester';
 
 export default function HomeScreen() {
   const navigation = useNavigation();
@@ -381,6 +382,7 @@ export default function HomeScreen() {
         )}
 
         {/* Test Buttons */}
+        <AlarmTester />
         {/* Debug Storage button removed as requested */}
       </ScrollView>
 

@@ -25,7 +25,6 @@ export default function SettingsScreen() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
-  const [alarmSoundType, setAlarmSoundType] = useState<string>(AlarmSoundGenerator.ALARM_TYPES.CLASSIC);
   const [currentView, setCurrentView] = useState<'settings' | 'troubleshooting'>('settings');
   const { testAlarmSound } = useAudio();
 
@@ -42,13 +41,11 @@ export default function SettingsScreen() {
       const savedDifficulty = await AsyncStorage.getItem('difficulty');
       const savedSoundEnabled = await AsyncStorage.getItem('soundEnabled');
       const savedVibrationEnabled = await AsyncStorage.getItem('vibrationEnabled');
-      const savedAlarmSoundType = await AsyncStorage.getItem('alarmSoundType');
 
       if (savedPuzzleType) setPuzzleType(savedPuzzleType as 'math' | 'pattern');
       if (savedDifficulty) setDifficulty(savedDifficulty as 'easy' | 'medium' | 'hard');
       if (savedSoundEnabled !== null) setSoundEnabled(savedSoundEnabled === 'true');
       if (savedVibrationEnabled !== null) setVibrationEnabled(savedVibrationEnabled === 'true');
-      if (savedAlarmSoundType) setAlarmSoundType(savedAlarmSoundType);
     } catch (error) {
       console.error('Failed to load settings:', error);
     }
@@ -60,7 +57,6 @@ export default function SettingsScreen() {
       await AsyncStorage.setItem('difficulty', difficulty);
       await AsyncStorage.setItem('soundEnabled', soundEnabled.toString());
       await AsyncStorage.setItem('vibrationEnabled', vibrationEnabled.toString());
-      await AsyncStorage.setItem('alarmSoundType', alarmSoundType);
       
       Alert.alert('Settings Saved', 'Your preferences have been saved successfully.');
     } catch (error) {
@@ -218,57 +214,6 @@ export default function SettingsScreen() {
       </SettingSection>
 
       <SettingSection title="Alarm Settings">
-        <View style={styles.alarmSoundSection}>
-          <View style={styles.alarmSoundHeader}>
-            <Ionicons name="musical-notes" size={24} color="#3b82f6" />
-            <View style={styles.alarmSoundHeaderText}>
-              <Text style={styles.alarmSoundTitle}>Alarm Sound</Text>
-              <Text style={styles.alarmSoundSubtitle}>Choose your alarm sound type</Text>
-            </View>
-          </View>
-          
-          <View style={styles.alarmSoundOptions}>
-            {AlarmSoundGenerator.getAllAlarmTypes().map((soundType) => (
-              <TouchableOpacity
-                key={soundType.value}
-                style={[
-                  styles.alarmSoundOption,
-                  alarmSoundType === soundType.value && styles.alarmSoundOptionSelected
-                ]}
-                onPress={() => setAlarmSoundType(soundType.value)}
-              >
-                <View style={styles.alarmSoundOptionContent}>
-                  <View style={styles.alarmSoundOptionLeft}>
-                    <View style={[
-                      styles.radioButton,
-                      alarmSoundType === soundType.value && styles.radioButtonSelected
-                    ]}>
-                      {alarmSoundType === soundType.value && (
-                        <View style={styles.radioButtonInner} />
-                      )}
-                    </View>
-                    <Text style={[
-                      styles.alarmSoundOptionText,
-                      alarmSoundType === soundType.value && styles.alarmSoundOptionTextSelected
-                    ]}>
-                      {soundType.label}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.previewButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      testAlarmSound(soundType.value);
-                    }}
-                  >
-                    <Ionicons name="play" size={16} color="#3b82f6" />
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
         <SettingRow
           icon="volume-high"
           title="Sound"
@@ -298,12 +243,12 @@ export default function SettingsScreen() {
         <TouchableOpacity 
           style={styles.testButton} 
           onPress={() => {
-            testAlarmSound(alarmSoundType);
-            Alert.alert('Testing Alarm Sound', `Playing ${AlarmSoundGenerator.getAlarmTypeDisplayName(alarmSoundType)} for 3 seconds...`);
+            testAlarmSound('default');
+            Alert.alert('Testing Alarm Sound', 'Playing alarm sound for 3 seconds...');
           }}
         >
           <Ionicons name="play-circle" size={20} color="#3b82f6" />
-          <Text style={styles.testButtonText}>Test Selected Sound</Text>
+          <Text style={styles.testButtonText}>Test Alarm Sound</Text>
         </TouchableOpacity>
       </SettingSection>
 
