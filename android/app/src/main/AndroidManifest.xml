@@ -50,7 +50,7 @@
         <data android:scheme="exp+unlockam-mobile-devbuild"/>
       </intent-filter>
     </activity>
-    <activity android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmActivity" android:theme="@style/Theme.AlarmFullScreen" android:showOnLockScreen="true" android:showWhenLocked="true" android:turnScreenOn="true" android:dismissKeyguard="true" android:excludeFromRecents="true" android:taskAffinity="" android:launchMode="singleInstance" android:exported="false" android:screenOrientation="portrait">
+    <activity android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmActivity" android:theme="@style/Theme.AlarmFullScreen" android:showOnLockScreen="true" android:showWhenLocked="true" android:turnScreenOn="true" android:excludeFromRecents="true" android:taskAffinity="" android:launchMode="singleInstance" android:exported="false" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="com.unlockam.ALARM_TRIGGERED"/>
         <category android:name="android.intent.category.DEFAULT"/>

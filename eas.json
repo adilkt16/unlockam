@@ -13,7 +13,19 @@
       },
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "default",
+        "env": {
+          "GRADLE_OPTS": "-Xmx4096m -XX:MaxMetaspaceSize=1024m",
+          "JAVA_OPTS": "-Xmx4096m"
+        },
+        "cache": {
+          "disabled": false,
+          "customPaths": [
+            "android/.gradle",
+            "node_modules"
+          ]
+        }
       },
       "ios": {
         "buildConfiguration": "Debug",
@@ -24,11 +36,53 @@
       "extends": "development",
       "android": {
         "buildType": "apk",
-        "gradleCommand": ":app:assembleDebug"
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "default",
+        "env": {
+          "GRADLE_OPTS": "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC",
+          "JAVA_OPTS": "-Xmx4096m"
+        },
+        "cache": {
+          "disabled": false,
+          "customPaths": [
+            "android/.gradle",
+            "node_modules",
+            "android/app/build"
+          ]
+        }
       },
       "ios": {
         "buildConfiguration": "Debug",
         "simulator": false
+      }
+    },
+    "downloadable": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "NODE_ENV": "development",
+        "EXPO_PUBLIC_ENV": "development"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "resourceClass": "default",
+        "withoutCredentials": false,
+        "env": {
+          "GRADLE_OPTS": "-Xmx4096m -XX:MaxMetaspaceSize=1024m -XX:+UseG1GC -Dorg.gradle.jvmargs='-Xmx4096m'",
+          "JAVA_OPTS": "-Xmx4096m",
+          "EAS_NO_VCS": "1"
+        },
+        "cache": {
+          "disabled": false,
+          "customPaths": [
+            "android/.gradle",
+            "node_modules",
+            "android/app/build/intermediates",
+            "~/.gradle/caches"
+          ]
+        }
       }
     },
     "preview": {
