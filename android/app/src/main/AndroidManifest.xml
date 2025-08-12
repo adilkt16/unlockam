@@ -50,37 +50,15 @@
         <data android:scheme="exp+unlockam-mobile-devbuild"/>
       </intent-filter>
     </activity>
-    <!-- Alarmy-style Lock Screen Activity with all necessary flags -->
-    <activity android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmActivity" 
-      android:theme="@style/Theme.AlarmFullScreen"
-      android:showOnLockScreen="true" 
-      android:showWhenLocked="true" 
-      android:turnScreenOn="true"
-      android:dismissKeyguard="true"
-      android:excludeFromRecents="true" 
-      android:taskAffinity="" 
-      android:launchMode="singleInstance"
-      android:exported="false"
-      android:screenOrientation="portrait">
+    <activity android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmActivity" android:theme="@style/Theme.AlarmFullScreen" android:showOnLockScreen="true" android:showWhenLocked="true" android:turnScreenOn="true" android:dismissKeyguard="true" android:excludeFromRecents="true" android:taskAffinity="" android:launchMode="singleInstance" android:exported="false" android:screenOrientation="portrait">
       <intent-filter>
         <action android:name="com.unlockam.ALARM_TRIGGERED"/>
         <category android:name="android.intent.category.DEFAULT"/>
       </intent-filter>
     </activity>
     <activity android:name=".alarmmodule.AlarmActivity" android:theme="@style/Theme.AppCompat.Translucent" android:showOnLockScreen="true" android:showWhenLocked="true" android:turnScreenOn="true" android:excludeFromRecents="true" android:exported="false"/>
-    <!-- Alarmy-style Foreground Service for reliable playback -->
-    <service android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmService" 
-      android:enabled="true" 
-      android:exported="false" 
-      android:foregroundServiceType="mediaPlayback" 
-      android:stopWithTask="false"
-      android:description="@string/alarmy_service_description"/>
-      
-    <!-- Alarmy-style Alarm Receiver with highest priority -->
-    <receiver android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmReceiver" 
-      android:enabled="true" 
-      android:exported="false" 
-      android:directBootAware="true">
+    <service android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmService" android:enabled="true" android:exported="false" android:foregroundServiceType="mediaPlayback" android:stopWithTask="false" android:description="@string/alarmy_service_description"/>
+    <receiver android:name="com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmReceiver" android:enabled="true" android:exported="false" android:directBootAware="true">
       <intent-filter android:priority="2147483647">
         <action android:name="com.unlockam.ALARMY_ALARM_TRIGGER"/>
         <action android:name="android.intent.action.BOOT_COMPLETED"/>

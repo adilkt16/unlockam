@@ -33,7 +33,6 @@
     <!-- Ensure activity shows over lock screen -->
     <item name="android:showWhenLocked">true</item>
     <item name="android:turnScreenOn">true</item>
-    <item name="android:dismissKeyguard">true</item>
     <!-- Keep screen on while alarm is active -->
     <item name="android:keepScreenOn">true</item>
   </style>

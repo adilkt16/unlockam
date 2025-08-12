@@ -108,6 +108,11 @@ android {
         versionCode 1
         versionName "1.0.0"
         multiDexEnabled true
+        
+        // Disable NDK to avoid license issues
+        ndk {
+            abiFilters.clear()
+        }
     }
     signingConfigs {
         debug {
