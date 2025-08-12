@@ -56,6 +56,29 @@
         "simulator": false
       }
     },
+    "minimal": {
+      "developmentClient": false,
+      "distribution": "internal",
+      "channel": "production",
+      "env": {
+        "NODE_ENV": "production",
+        "EAS_NO_VCS": "1",
+        "EXPO_SKIP_MANIFEST_VALIDATION_WARNINGS": "1"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "resourceClass": "default",
+        "withoutCredentials": false,
+        "env": {
+          "GRADLE_OPTS": "-Xmx1536m -XX:MaxMetaspaceSize=256m -Dorg.gradle.daemon=false -Dorg.gradle.workers.max=1",
+          "JAVA_OPTS": "-Xmx1536m"
+        },
+        "cache": {
+          "disabled": true
+        }
+      }
+    },
     "downloadable": {
       "developmentClient": true,
       "distribution": "internal",

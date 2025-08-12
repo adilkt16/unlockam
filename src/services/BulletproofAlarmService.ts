@@ -4,13 +4,43 @@ import * as Notifications from 'expo-notifications';
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { Platform, NativeModules, DeviceEventEmitter } from 'react-native';
 import { GlobalAudioManager } from './GlobalAudioManager';
-import { NativeModuleDebugger } from '../utils/NativeModuleDebugger';
+import { AlarmyStyleAlarm } from './AlarmyStyleAlarmManager';
 
 const { AndroidAlarmAudio } = NativeModules;
 
 /**
  * BULLETPROOF ALARM SERVICE
- * Guarantees alarm sound playback in background and locked state
+ * Guarantees alarm  async testNativeSer    // Use comprehensive debugger
+    const isModuleAvailable = AlarmyStyleAlarm && typeof AlarmyStyleAlarm.testNativeServiceNow === 'function';
+    
+    if (!isModuleAvailable) {
+      console.log('❌ NATIVE MODULE TEST FAILED - AlarmyStyleAlarm not available');
+      console.log('🏗️  This likely means the app needs to be rebuilt with EAS Build or expo run:android');
+      console.log('🔧 Native modules require native compilation, not just Metro bundler refresh');
+      console.log('===============================================');
+      return;
+    }
+
+    // Test the actual service call
+    console.log('🧪 TESTING ACTUAL NATIVE SERVICE CALL...');
+    const callSuccess = await AlarmyStyleAlarm.testNativeServiceNow();mise<void> {
+    console.log('🔍 TESTING NATIVE SERVICE NOW - START');
+    console.log('===============================================');
+    
+    // Check if AlarmyStyleAlarm native module is available
+    const isModuleAvailable = AlarmyStyleAlarm && typeof AlarmyStyleAlarm.testNativeServiceNow === 'function';
+    
+    if (!isModuleAvailable) {
+      console.log('❌ NATIVE MODULE TEST FAILED - AlarmyStyleAlarm not available');
+      console.log('🏗️  This likely means the app needs to be rebuilt with EAS Build or expo run:android');
+      console.log('🔧 Native modules require native compilation, not just Metro bundler refresh');
+      console.log('===============================================');
+      return;
+    }
+
+    // Test the actual service call
+    console.log('🧪 TESTING ACTUAL NATIVE SERVICE CALL...');
+    const callSuccess = await AlarmyStyleAlarm.testNativeServiceNow(); background and locked state
  * Works even without DOOA or notification permissions
  */
 export class BulletproofAlarmService {
@@ -470,27 +500,15 @@ export class BulletproofAlarmService {
     }));
 
     // CRITICAL: Use native Android alarm for background reliability
-    if (Platform.OS === 'android' && AndroidAlarmAudio) {
+    if (Platform.OS === 'android' && AlarmyStyleAlarm.isAvailable) {
       try {
         // Schedule native Android alarm that will work even when app is backgrounded
-        await AndroidAlarmAudio.scheduleAlarm({
+        await AlarmyStyleAlarm.scheduleAlarm({
           alarmId: this.activeAlarmId,
           triggerTime: testDate.getTime(),
-          soundType: 'default',
-          vibration: true,
           label: 'UnlockAM Test Alarm',
         });
         console.log('✅ BULLETPROOF TEST: Native Android alarm scheduled!');
-        
-        // Also schedule stop alarm
-        await AndroidAlarmAudio.scheduleAlarm({
-          alarmId: `${this.activeAlarmId}-stop`,
-          triggerTime: endDate.getTime(),
-          soundType: 'default',
-          vibration: false,
-          label: 'UnlockAM Test Alarm Stop',
-        });
-        console.log('✅ BULLETPROOF TEST: Auto-stop scheduled!');
         
       } catch (nativeError) {
         console.error('❌ Failed to schedule native alarm:', nativeError);

@@ -1,7 +1,48 @@
 package com.unlockam.mobile.devbuild.alarmmodule
 
-import android.app.Notification
-import android.app.NotificationChannel
+import android.app.Not    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.i(tag, "AlarmyStyleAlarmService onStartCommand called")
+        
+        val action = intent?.action
+        val alarmId = intent?.getIntExtra("alarm_id", -1) ?: -1
+        val isTestMode = intent?.getBooleanExtra("test_mode", false) ?: false
+        
+        Log.d(tag, "Service started with action: $action, alarmId: $alarmId, testMode: $isTestMode")
+        
+        when (action) {
+            "com.unlockam.ALARMY_ALARM_TRIGGER" -> {
+                currentAlarmId = alarmId
+                Log.i(tag, "Starting alarm playback for alarm ID: $currentAlarmId")
+                startAlarmPlayback()
+            }
+            "com.unlockam.TEST_ALARM_SERVICE" -> {
+                currentAlarmId = alarmId
+                Log.i(tag, "Starting TEST alarm playback for testing")
+                startAlarmPlayback()
+                
+                // Auto-stop test alarm after 30 seconds
+                handler.postDelayed({
+                    Log.i(tag, "Auto-stopping test alarm")
+                    stopAlarmPlayback()
+                    stopSelf()
+                }, 30000)
+            }
+            "com.unlockam.STOP_ALARM" -> {
+                Log.i(tag, "Received stop alarm command")
+                stopAlarmPlayback()
+                stopSelf()
+            }
+            else -> {
+                Log.w(tag, "Unknown action received: $action")
+                // Default behavior - start alarm
+                currentAlarmId = alarmId
+                startAlarmPlayback()
+            }
+        }
+        
+        // Return START_STICKY to ensure service restarts if killed
+        return START_STICKY
+    }droid.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -34,6 +75,9 @@ class AlarmyStyleAlarmService : Service() {
     private val tag = "AlarmyStyleService"
     private val notificationId = 12345
     private val channelId = "alarmy_alarm_channel"
+    
+    // Handler for delayed operations
+    private val handler = Handler(Looper.getMainLooper())
     
     // Wake locks to keep CPU and screen alive
     private var wakeLock: PowerManager.WakeLock? = null

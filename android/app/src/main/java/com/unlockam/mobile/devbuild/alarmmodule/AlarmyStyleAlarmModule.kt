@@ -90,6 +90,63 @@ class AlarmyStyleAlarmModule(reactContext: ReactApplicationContext) : ReactConte
             promise.reject("SCHEDULE_ERROR", e.message)
         }
     }
+
+    /**
+     * Test native service directly - trigger alarm service now for testing
+     */
+    @ReactMethod
+    fun testNativeServiceNow(promise: Promise) {
+        try {
+            Log.d(tag, "Testing native alarm service NOW")
+            
+            // Start the service directly for testing
+            val serviceIntent = Intent(reactApplicationContext, AlarmyStyleAlarmService::class.java).apply {
+                action = "com.unlockam.TEST_ALARM_SERVICE"
+                putExtra("test_mode", true)
+                putExtra("alarm_id", -999) // Test alarm ID
+            }
+            
+            reactApplicationContext.startForegroundService(serviceIntent)
+            
+            promise.resolve(WritableNativeMap().apply {
+                putBoolean("success", true)
+                putString("message", "Native alarm service started for testing")
+            })
+            
+        } catch (e: Exception) {
+            Log.e(tag, "Error testing native service", e)
+            promise.reject("TEST_ERROR", e.message)
+        }
+    }
+
+    /**
+     * Test locked-state alarm playback immediately
+     */
+    @ReactMethod
+    fun testLockedStateAlarmNow(promise: Promise) {
+        try {
+            Log.d(tag, "Testing locked state alarm NOW")
+            
+            // Start alarm activity directly
+            val alarmIntent = Intent(reactApplicationContext, AlarmyStyleAlarmActivity::class.java).apply {
+                action = "com.unlockam.ALARM_TRIGGERED"
+                putExtra("alarm_id", -998) // Test alarm ID
+                putExtra("test_mode", true)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                        Intent.FLAG_ACTIVITY_NO_ANIMATION
+            }
+            
+            reactApplicationContext.startActivity(alarmIntent)
+            
+            // Also start the service
+            testNativeServiceNow(promise)
+            
+        } catch (e: Exception) {
+            Log.e(tag, "Error testing locked state alarm", e)
+            promise.reject("TEST_ERROR", e.message)
+        }
+    }
     
     /**
      * Cancel an alarm
