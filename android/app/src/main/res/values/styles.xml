@@ -18,4 +18,23 @@
     <item name="android:showWhenLocked">true</item>
     <item name="android:turnScreenOn">true</item>
   </style>
+
+  <!-- Alarmy-style Full Screen Alarm Theme -->
+  <style name="Theme.AlarmFullScreen" parent="Theme.AppCompat.NoActionBar">
+    <!-- Make the activity full screen and show over lock screen -->
+    <item name="android:windowFullscreen">true</item>
+    <item name="android:windowNoTitle">true</item>
+    <item name="android:windowBackground">@color/alarm_background</item>
+    <item name="android:windowShowWallpaper">false</item>
+    <item name="android:windowIsTranslucent">false</item>
+    <item name="android:windowContentOverlay">@null</item>
+    <item name="android:windowActionBar">false</item>
+    <item name="android:windowTitleSize">0dp</item>
+    <!-- Ensure activity shows over lock screen -->
+    <item name="android:showWhenLocked">true</item>
+    <item name="android:turnScreenOn">true</item>
+    <item name="android:dismissKeyguard">true</item>
+    <!-- Keep screen on while alarm is active -->
+    <item name="android:keepScreenOn">true</item>
+  </style>
 </resources>

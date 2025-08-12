@@ -3,9 +3,11 @@
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
   <string name="expo_runtime_version">1.0.0</string>
-  
-  <!-- Production Alarm System Strings -->
-  <string name="alarm_service_description">UnlockAM alarm service that ensures alarms play reliably even when the device is in Doze mode or the screen is locked</string>
-  <string name="alarm_notification_channel_name">UnlockAM Alarms</string>
-  <string name="alarm_notification_channel_description">Critical alarm notifications that ensure you wake up on time</string>
+  <string name="alarmy_service_description">UnlockAM alarm service that ensures alarms play reliably even when the device is in Doze mode, Do Not Disturb is active, or the screen is locked</string>
+  <string name="alarmy_notification_channel_name">UnlockAM Critical Alarms</string>
+  <string name="alarmy_notification_channel_description">High-priority alarm notifications that override Do Not Disturb and ensure you wake up on time</string>
+  <string name="alarmy_foreground_notification_title">Alarm Active</string>
+  <string name="alarmy_foreground_notification_text">Your alarm is currently ringing</string>
+  <string name="alarmy_overlay_permission_title">Display Over Apps Permission</string>
+  <string name="alarmy_overlay_permission_message">To ensure alarms work reliably over lock screen and other apps, please grant Display Over Apps permission.</string>
 </resources>

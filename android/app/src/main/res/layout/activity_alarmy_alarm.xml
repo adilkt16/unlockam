@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/alarm_background"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <!-- Alarm Time Display -->
+    <TextView
+        android:id="@+id/alarm_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="07:00"
+        android:textSize="72sp"
+        android:textColor="@color/alarm_text"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Alarm Label -->
+    <TextView
+        android:id="@+id/alarm_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Wake up!"
+        android:textSize="24sp"
+        android:textColor="@color/alarm_secondary"
+        android:layout_marginBottom="48dp"
+        android:gravity="center" />
+
+    <!-- Puzzle Section -->
+    <TextView
+        android:id="@+id/puzzle_question"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Solve to dismiss alarm:\n12 + 8"
+        android:textSize="20sp"
+        android:textColor="@color/alarm_text"
+        android:layout_marginBottom="32dp"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp" />
+
+    <!-- Answer Buttons Grid -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- First Row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <Button
+                android:id="@+id/answer_button_1"
+                android:layout_width="120dp"
+                android:layout_height="80dp"
+                android:text="20"
+                android:textSize="24sp"
+                android:textColor="@color/alarm_text"
+                android:background="@drawable/alarm_button_background"
+                android:layout_marginEnd="16dp" />
+
+            <Button
+                android:id="@+id/answer_button_2"
+                android:layout_width="120dp"
+                android:layout_height="80dp"
+                android:text="18"
+                android:textSize="24sp"
+                android:textColor="@color/alarm_text"
+                android:background="@drawable/alarm_button_background" />
+
+        </LinearLayout>
+
+        <!-- Second Row -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/answer_button_3"
+                android:layout_width="120dp"
+                android:layout_height="80dp"
+                android:text="22"
+                android:textSize="24sp"
+                android:textColor="@color/alarm_text"
+                android:background="@drawable/alarm_button_background"
+                android:layout_marginEnd="16dp" />
+
+            <Button
+                android:id="@+id/answer_button_4"
+                android:layout_width="120dp"
+                android:layout_height="80dp"
+                android:text="16"
+                android:textSize="24sp"
+                android:textColor="@color/alarm_text"
+                android:background="@drawable/alarm_button_background" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Bottom Instructions -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Choose the correct answer to dismiss the alarm"
+        android:textSize="14sp"
+        android:textColor="@color/alarm_secondary"
+        android:layout_marginTop="48dp"
+        android:gravity="center" />
+
+</LinearLayout>

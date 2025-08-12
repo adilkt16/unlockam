@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Pressed State -->
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/alarm_primary" />
+            <corners android:radius="12dp" />
+            <stroke android:width="2dp" android:color="@color/alarm_text" />
+        </shape>
+    </item>
+    
+    <!-- Normal State -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/alarm_button" />
+            <corners android:radius="12dp" />
+            <stroke android:width="1dp" android:color="@color/alarm_secondary" />
+        </shape>
+    </item>
+</selector>

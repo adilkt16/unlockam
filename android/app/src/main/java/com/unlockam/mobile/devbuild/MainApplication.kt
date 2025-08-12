@@ -17,6 +17,7 @@ import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 import com.unlockam.alarmmodule.AndroidAlarmAudioPackage
 import com.unlockam.alarmmodule.ProductionAlarmPackage
+import com.unlockam.mobile.devbuild.alarmmodule.AlarmyStyleAlarmPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -30,6 +31,8 @@ class MainApplication : Application(), ReactApplication {
             packages.add(AndroidAlarmAudioPackage())
             // Add production alarm package for reliable background alarms
             packages.add(ProductionAlarmPackage())
+            // Add Alarmy-style alarm package for maximum reliability
+            packages.add(AlarmyStyleAlarmPackage())
             return packages
           }
 
